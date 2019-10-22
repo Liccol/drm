@@ -28,6 +28,45 @@ switch = {
     ["04"] = "keyRules",
     ["FF"] = "signature"
 }
+licenseRequestTb = {
+    type = "licenseRequest",
+    version = "2.0",
+    deviceID = "2dsgasg123g1h",
+    -- nonce:临时使用值
+    nonce = "213",
+    --requestTime: UTC时间
+    requestTime = "700000",
+    contentIDs = "123124421",
+    supportedAlgorithms = "KMSProfile1",
+    extensions = "",
+    certificateChain = "",
+    signature = "321wer2wqe312aswetq2",
+}
+function table2json(t)
+    -- 构建局部函数，在本函数最后调用
+    local function serialize(tbl)
+        local tmp = {}
+        for k, v in pairs(tbl) do
+            local k_type = type(k)
+            local v_type = type(v)
+            local key = (k_type == "string" and "\"" .. k .. "\":")
+                or (k_type == "number" and "")
+            local value = (v_type == "table" and serialize(v))
+                or (v_type == "boolean" and tostring(v))
+                or (v_type == "string" and "\"" .. v .. "\"")
+                or (v_type == "number" and v)
+            tmp[#tmp + 1] = key and value and tostring(key) .. tostring(value) or nil
+        end
+        -- maxn返回最大正数索引，没有正数索引的话返回0
+        if #(tbl) == 0 then
+            return "{" .. table.concat(tmp, ",") .. "}"
+        else
+            return "[" .. table.concat(tmp, ",") .. "]"
+        end
+    end
+    assert(type(t) == "table")
+    return serialize(t)
+end
 
 function hex2num(hexInput)
     local numReturn = tonumber(hexInput, 16)
@@ -146,4 +185,9 @@ end
 function getDrmId()
 	-- 添加查询过程
 	return drmId;
+end
+
+function getLicenseRequest()
+	jstrRtn = table2json(licenseRequestTb);
+	return jstrRtn, #jstrRtn;
 end

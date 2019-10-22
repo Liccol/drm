@@ -91,19 +91,15 @@ int CDRMC_CloseSession (CDRMC_SessionHandle hSession)
     printf("Session closed.\n");
     return 0;
 }
-/*
-DRM信息:pu8DrmInfo, include
----------name----------|--bit---
-descriptor_tag         |   8
-descriptor_length      |   8
-video_format           |   4
-video_encryption_method|   4
-audio_format           |   4
-audio_encryption_method|   4
-DRM_data_bytes         |(description_length-2)*8
-*/
 // 获取许可证请求，得到许可证请求内容--->>>查看下许可证请求里面是不是要带设备ID信息？
 
+//功能：获取许可证请求消息。
+//参数：hSession—输入参数，DRM会话句柄；
+//pu8DrmInfo—输入参数，DRM信息；
+//u32DrmInfoLen—输入参数，DRM信息长度；
+//pu8LicenseRequest—输出参数，许可证请求数据缓冲区；
+//pu32LicenseRequestLen—输入输出参数，输入许可证请求数据缓冲区长度，输出许可证请求数据长度。
+//返回：int，0表示成功，其他表示失败。
 int CDRMC_GetLicenseRequest (
 				CDRMC_SessionHandle hSession, 
 	            unsigned char* pu8DrmInfo,
@@ -111,8 +107,38 @@ int CDRMC_GetLicenseRequest (
 	            unsigned char* pu8LicenseRequest, 
 	            unsigned int* pu32LicenseRequestLen)
 {
+	// cout << "input: "<< pu8LicenseRequest << endl;
+	// 无法打印出所有内容,因为*指向的是数组的首地址, 所以只能得到第一个字符内容
+	lua_State *L = luaL_newstate();
+	if (L == NULL)
+	{
+		cout << "Creat Lua State Error !" << endl;
+		return -1;
+	}
+	luaL_openlibs(L);
+	int ret = luaL_dofile(L, "D:\\vsProject\\drm\\drm\\src\\luacode\\functionsForDrm.lua");
+	if (ret)
+	{
+		cout << "Lua doFile Error !" << endl;
+		return 1;
+	}
+	lua_getglobal(L, "getLicenseRequest");
+	lua_pushstring(L, (const char*)pu8DrmInfo);
+	lua_pushnumber(L, u32DrmInfoLen);
+	lua_pcall(L, 2, 2, 0);
+	// 提取请求长度
+	unsigned int lenRtn = lua_tointeger(L, -1);
+	*pu32LicenseRequestLen = lenRtn;
+	// 提取请求内容
+	string strRtn = lua_tostring(L, -2);
+	// 使用memcpy拷贝内容至数组中去
+	// --------------------------------在这里出现异常报错,memcpy的使用有问题
+	//memcpy(pu8LicenseRequest, strRtn.c_str(), *pu32LicenseRequestLen);
+	//pu8LicenseRequest = reinterpret_cast<unsigned char*> (strRtn.c_str());
+	lua_close(L);
 	return 0;
 }
+
 // 功能：处理许可证响应消息。
 // 参数：hSession—输入参数，DRM会话句柄；
 // pu8LicenseResponse—输入参数，许可证数据；
@@ -133,17 +159,12 @@ int CDRMC_ProcessLicenseResponse (CDRMC_SessionHandle hSession,
 	if (ret)
 	{
 		cout << "Lua doFile Error !" << endl;
-		cin.get();
 		return 1;
 	}
 	lua_getglobal(L, "processLicenseResponse");
 	lua_pushstring(L, (const char*)pu8LicenseResponse);
 	lua_pushnumber(L, u32LicenseResponseLen);
 	lua_pcall(L, 2, 0, 0);
-	if (lua_isnumber(L, -1))
-	{
-		cout << "the result is :" << lua_tonumber(L, -1) << endl;
-	}
 	lua_close(L);
 	return 0;
 }
@@ -350,7 +371,7 @@ int main(int argc, char* argv[]) {
 	cout << "start DRM client" << endl;
 	CDRMC_SessionHandle hSession = NULL;
 	unsigned char deviceId[] = "";
-	unsigned int deviceIdLen = 0; 
+	unsigned int deviceIdLen = sizeof(deviceId) - 1; 
 	cout << "start CDRMC_GetDeviceId test!" << endl;
 	if (CDRMC_GetDeviceId(hSession, deviceId, &deviceIdLen)) {
 		cout << "CDRMC_GetDeviceId error" << endl;
@@ -381,8 +402,19 @@ int main(int argc, char* argv[]) {
 	cout << "rights status is " << pRightsStatus << endl;
 	cout << "end CDRMC_CheckRightsStatus test" << endl << endl;
 
+	unsigned char pu8LicenseRequest[] = "";
+	unsigned int pu32LicenseRequestLen = sizeof(pu8LicenseRequest) - 1;
+	cout << "start CDRMC_GetLicenseRequest test!" << endl;
+	if (CDRMC_GetLicenseRequest(hSession, pu8DrmInfo, u32DrmInfoLen, 
+			pu8LicenseRequest, &pu32LicenseRequestLen)) {
+		cout << "CDRMC_GetLicenseRequest error" << endl;
+		return -1;
+	}
+	cout << "license request is " << pu8LicenseRequest << endl;
+	cout << "license request'length is " << pu32LicenseRequestLen << endl;
+	cout << "end CDRMC_GetLicenseRequest test" << endl << endl;
 
-
+	// test done
 	cin.get();
 	return 0;
 }
