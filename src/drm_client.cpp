@@ -56,29 +56,6 @@ typedef struct __CDRMC_Cenc
 	unsigned int u32SubsampleNum;		//Subsample数量
 } CDRMC_Cenc;
 
-// 辅助函数定义
-// char * ---> unsigned char *转换, 待测试
-//void convertStrToUnChar(char* str, unsigned char* UnChar)
-//{
-//	int i = strlen(str), j = 0, counter = 0;
-//	cout << i;
-//	char c[2];
-//	unsigned int bytes[2];
-//	for (j = 0; j < i; j += 2)
-//	{
-//		if (0 == j % 2)
-//		{
-//			c[0] = str[j];
-//			c[1] = str[j + 1];
-//			sscanf(c, "%02x", &bytes[0]);
-//			UnChar[counter] = bytes[0];
-//			counter++;
-//		}
-//	}
-//	cout << UnChar;
-//	return;
-//}
-
 // 接口定义
 int CDRMC_OpenSession (CDRMC_SessionHandle *phSession)
 {
@@ -107,7 +84,7 @@ int CDRMC_GetLicenseRequest (
 	            unsigned char* pu8LicenseRequest, 
 	            unsigned int* pu32LicenseRequestLen)
 {
-	// cout << "input: "<< pu8LicenseRequest << endl;
+	cout << "input: "<< pu8LicenseRequest << endl;
 	// 无法打印出所有内容,因为*指向的是数组的首地址, 所以只能得到第一个字符内容
 	lua_State *L = luaL_newstate();
 	if (L == NULL)
@@ -130,11 +107,13 @@ int CDRMC_GetLicenseRequest (
 	unsigned int lenRtn = lua_tointeger(L, -1);
 	*pu32LicenseRequestLen = lenRtn;
 	// 提取请求内容
-	string strRtn = lua_tostring(L, -2);
+	const char* strRtn = lua_tostring(L, -2);
 	// 使用memcpy拷贝内容至数组中去
 	// --------------------------------在这里出现异常报错,memcpy的使用有问题
-	//memcpy(pu8LicenseRequest, strRtn.c_str(), *pu32LicenseRequestLen);
-	//pu8LicenseRequest = reinterpret_cast<unsigned char*> (strRtn.c_str());
+	// memcpy(pu8LicenseRequest, strRtn, *pu32LicenseRequestLen);
+	char *pu8LicenseRequestChar = const_cast<char*>(strRtn);
+	pu8LicenseRequest = (unsigned char*)(pu8LicenseRequestChar);
+	cout << pu8LicenseRequest <<"test"<< endl;
 	lua_close(L);
 	return 0;
 }
@@ -402,7 +381,7 @@ int main(int argc, char* argv[]) {
 	cout << "rights status is " << pRightsStatus << endl;
 	cout << "end CDRMC_CheckRightsStatus test" << endl << endl;
 
-	unsigned char pu8LicenseRequest[] = "";
+	unsigned char pu8LicenseRequest[] = "213";
 	unsigned int pu32LicenseRequestLen = sizeof(pu8LicenseRequest) - 1;
 	cout << "start CDRMC_GetLicenseRequest test!" << endl;
 	if (CDRMC_GetLicenseRequest(hSession, pu8DrmInfo, u32DrmInfoLen, 
