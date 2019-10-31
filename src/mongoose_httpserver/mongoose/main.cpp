@@ -2,6 +2,40 @@
 #include <memory>
 #include "http_server.h"
 
+using namespace std;
+
+struct reqForm
+{
+	string type;
+	string version;
+	string deviceID;
+	string version;
+	string nonce;
+	string requestTime;
+	string contentIDs[100];
+	string supportedAlgorithms[100];
+	string extensions[100];
+	string certificateChain[100];
+	string signature;
+}licenseReq;
+
+struct rspForm
+{
+	string type;
+	string version;
+	string status;
+	string selectedAlgorithm;
+	string responseTime;
+	string deviceID;
+	string drmServerID;
+	string nonce;
+	string protectedLicenses[100];
+	string certificateChain[100];
+	string ocspResponse;
+	string signature;
+}licenseRsp;
+
+
 bool Fun1Handler(std::string body, std::string query_string, mg_connection *c, OnRspCallback reply_callback)
 {
     std::cout << "FUNC: " << __FUNCTION__ << "  "
@@ -45,7 +79,7 @@ bool Fun2Handler(std::string body, std::string query_string, mg_connection *c, O
 
     /* Compute the result and send it back as a JSON object */
     result = strtod(n1, NULL) + strtod(n2, NULL);
-    sprintf(res, "%0.5f", result);
+    sprintf_s(res, "%0.5f", result);
     reply_callback(c, "200 OK", res);
 
     return true;
@@ -54,6 +88,7 @@ bool Fun2Handler(std::string body, std::string query_string, mg_connection *c, O
 // 添加url动态解析，把请求信息解析到该函数中
 bool Fun3Handler(std::string body, std::string query_string, mg_connection *c, OnRspCallback reply_callback)
 {
+	std::cout << "get license request!" << endl;
 	std::cout << "FUNC: " << __FUNCTION__ << "  "
 		<< "body: " << body << std::endl;
 	std::cout << "FUNC: " << __FUNCTION__ << "  "
@@ -82,7 +117,7 @@ bool Fun3Handler(std::string body, std::string query_string, mg_connection *c, O
 
 	/* Compute the result and send it back as a JSON object */
 	result = strtod(n1, NULL) + strtod(n2, NULL);
-	sprintf(res, "%0.5f", result);
+	sprintf_s(res, "%0.5f", result);
 	reply_callback(c, "200 OK", res);
 
 	return true;
