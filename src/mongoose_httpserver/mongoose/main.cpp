@@ -6,10 +6,9 @@ using namespace std;
 
 struct reqForm
 {
-	string type;
+	char type[100];
 	string version;
 	string deviceID;
-	string version;
 	string nonce;
 	string requestTime;
 	string contentIDs[100];
@@ -58,9 +57,7 @@ bool Fun2Handler(std::string body, std::string query_string, mg_connection *c, O
     char n1[100], n2[100];
     char res[100];
     double result;
-
-    /* Get form variables */
-    /* string: n1=x&n2=y  */
+	
     if(!body.empty()){
         struct mg_str http_body;
         http_body.p   = body.c_str();
@@ -86,38 +83,67 @@ bool Fun2Handler(std::string body, std::string query_string, mg_connection *c, O
 }
 
 // 添加url动态解析，把请求信息解析到该函数中
+/*struct reqForm
+	{
+		string type;
+		string version;
+		string deviceID;
+		string nonce;
+		string requestTime;
+		string contentIDs[100];
+		string supportedAlgorithms[100];
+		string extensions[100];
+		string certificateChain[100];
+		string signature;
+	}licenseReq;*/
 bool Fun3Handler(std::string body, std::string query_string, mg_connection *c, OnRspCallback reply_callback)
 {
+	// 使用POST的话, body里边会有东西么？
 	std::cout << "get license request!" << endl;
 	std::cout << "FUNC: " << __FUNCTION__ << "  "
 		<< "body: " << body << std::endl;
 	std::cout << "FUNC: " << __FUNCTION__ << "  "
 		<< "query_string: " << query_string << std::endl;
 
-	char n1[100], n2[100];
 	char res[100];
+	char tmp[100] = "";
 	double result;
-	/* Get form variables */
-	/* string: n1=x&n2=y  */
+	//get content
 	if (!body.empty()) {
 		struct mg_str http_body;
 		http_body.p = body.c_str();
 		http_body.len = body.length();
-		mg_get_http_var(&http_body, "n1", n1, sizeof(n1));
-		mg_get_http_var(&http_body, "n2", n2, sizeof(n2));
-
 	}
 	else if (!query_string.empty()) {
 		struct mg_str http_body;
 		http_body.p = query_string.c_str();
 		http_body.len = query_string.length();
-		mg_get_http_var(&http_body, "n1", n1, sizeof(n1));
-		mg_get_http_var(&http_body, "n2", n2, sizeof(n2));
+		mg_get_http_var(&http_body, "type", licenseReq.type, sizeof(tmp));
+		mg_get_http_var(&http_body, "version", tmp, sizeof(tmp));
+		licenseReq.version = tmp;
+		mg_get_http_var(&http_body, "deviceID", tmp, sizeof(tmp));
+		licenseReq.deviceID = tmp;
+		mg_get_http_var(&http_body, "nonce", tmp, sizeof(tmp));
+		licenseReq.nonce = tmp;
+		mg_get_http_var(&http_body, "requestTime", tmp, sizeof(tmp));
+		licenseReq.requestTime = tmp;
+		mg_get_http_var(&http_body, "signature", tmp, sizeof(tmp));
+		licenseReq.signature = tmp;
+		// 字符串数组的解析方式还需要更改
+		mg_get_http_var(&http_body, "contentIDs", tmp, sizeof(tmp));
+		licenseReq.contentIDs[0] = tmp;
+		mg_get_http_var(&http_body, "supportedAlgorithms", tmp, sizeof(tmp));
+		licenseReq.supportedAlgorithms[0] = tmp;
+		mg_get_http_var(&http_body, "extensions", tmp, sizeof(tmp));
+		licenseReq.extensions[0] = tmp;
+		mg_get_http_var(&http_body, "certificateChain", tmp, sizeof(tmp));
+		licenseReq.certificateChain[0] = tmp;
+		std::cout << "version is " << licenseReq.version << endl;
 	}
-
 	/* Compute the result and send it back as a JSON object */
-	result = strtod(n1, NULL) + strtod(n2, NULL);
+	result = 200;
 	sprintf_s(res, "%0.5f", result);
+	
 	reply_callback(c, "200 OK", res);
 
 	return true;
