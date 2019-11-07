@@ -109,11 +109,9 @@ int CDRMC_GetLicenseRequest (
 	// 提取请求内容
 	const char* strRtn = lua_tostring(L, -2);
 	// 使用memcpy拷贝内容至数组中去
-	// --------------------------------在这里出现异常报错,memcpy的使用有问题
-	// memcpy(pu8LicenseRequest, strRtn, *pu32LicenseRequestLen);
-	char *pu8LicenseRequestChar = const_cast<char*>(strRtn);
-	pu8LicenseRequest = (unsigned char*)(pu8LicenseRequestChar);
-	cout << pu8LicenseRequest <<"test"<< endl;
+	// 在这里出现异常报错,memcpy的使用有问题,初始化数组时长度不够,所以越界.
+	memcpy(pu8LicenseRequest, strRtn, *pu32LicenseRequestLen);
+	cout << "licenseRequest content: " << pu8LicenseRequest << endl;
 	lua_close(L);
 	return 0;
 }
@@ -359,8 +357,8 @@ int main(int argc, char* argv[]) {
 	cout << "Length of device ID is "<< deviceIdLen << endl;
 	cout << "end CDRMC_GetDeviceId test" << endl << endl;
 
-	unsigned char pu8LicenseResponse[] = "01010028FF02020028FE03030028FD04040028FCFF080028FA05050028FB";
-	// 使用sizeof的时候会把最后一个当作\n这类结尾符来处理?
+	unsigned char pu8LicenseResponse[10000] = "01010028FF02020028FE03030028FD04040028FCFF080028FA05050028FB";
+	// 使用sizeof的时候会把最后一个当作\n这类结尾符来处理, 所以需要-1
 	unsigned int u32LicenseResponseLen = sizeof(pu8LicenseResponse) - 1;
 	cout << "start CDRMC_ProcessLicenseResponse test!" << endl;
 	if (CDRMC_ProcessLicenseResponse(hSession, pu8LicenseResponse, u32LicenseResponseLen)) {
@@ -369,7 +367,7 @@ int main(int argc, char* argv[]) {
 	}
 	cout << "end CDRMC_ProcessLicenseResponse test" << endl << endl;
 	
-	unsigned char pu8DrmInfo[] = "2121423213";
+	unsigned char pu8DrmInfo[10000] = "2121423213";
 	unsigned int u32DrmInfoLen = sizeof(pu8DrmInfo) - 1;
 	cout << pu8DrmInfo << endl << u32DrmInfoLen << endl;
 	CDRMC_Rights_Status pRightsStatus = CDRMC_RIGHTS_INVALID;
@@ -381,7 +379,7 @@ int main(int argc, char* argv[]) {
 	cout << "rights status is " << pRightsStatus << endl;
 	cout << "end CDRMC_CheckRightsStatus test" << endl << endl;
 
-	unsigned char pu8LicenseRequest[] = "213";
+	unsigned char pu8LicenseRequest[10000] = "213";
 	unsigned int pu32LicenseRequestLen = sizeof(pu8LicenseRequest) - 1;
 	cout << "start CDRMC_GetLicenseRequest test!" << endl;
 	if (CDRMC_GetLicenseRequest(hSession, pu8DrmInfo, u32DrmInfoLen, 
