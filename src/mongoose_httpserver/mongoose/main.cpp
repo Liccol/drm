@@ -6,7 +6,7 @@ using namespace std;
 
 struct reqForm
 {
-	char type[100];
+	string type;
 	string version;
 	string deviceID;
 	string nonce;
@@ -118,7 +118,8 @@ bool Fun3Handler(std::string body, std::string query_string, mg_connection *c, O
 		struct mg_str http_body;
 		http_body.p = query_string.c_str();
 		http_body.len = query_string.length();
-		mg_get_http_var(&http_body, "type", licenseReq.type, sizeof(tmp));
+		mg_get_http_var(&http_body, "type", tmp, sizeof(tmp));
+		licenseReq.type = tmp;
 		mg_get_http_var(&http_body, "version", tmp, sizeof(tmp));
 		licenseReq.version = tmp;
 		mg_get_http_var(&http_body, "deviceID", tmp, sizeof(tmp));
