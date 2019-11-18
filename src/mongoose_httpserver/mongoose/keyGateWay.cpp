@@ -4,6 +4,7 @@
 
 using namespace std;
 
+
 struct cekStruct {
 	string cekID;
 	string encCEK;
@@ -25,7 +26,6 @@ struct reqForm
 	string kmsID;
 	string nonce;
 	string selectedAlgorithm;
-	string selectedAlgorithm;
 	string contentInfosTmp;
 	struct contentInfomation contentInfos[100];
 	string extensions[100];
@@ -38,7 +38,6 @@ struct rspForm
 	string type;
 	string version;
 	string keyGateWayID;
-	string selectedAlgorithm;
 	string nonce;
 	string status;
 	string selectedAlgorithm;
